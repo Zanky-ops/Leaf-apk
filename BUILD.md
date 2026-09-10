@@ -84,7 +84,62 @@ keytool -genkey -v -keystore leafdiag.jks -keyalg RSA \
 
 ---
 
-## Що було виправлено перед збіркою
+## Що змінилося у версії 0.5.0
+
+- Інтерфейс переписано на Jetpack Compose: одинадцять екранів замість одного
+  списку кнопок.
+- Стек оновлено під сучасну Android Studio: **AGP 9.4.0, Gradle 9.6.0,
+  compileSdk 37, targetSdk 36, Compose BOM 2026.09.00**.
+- Плагін `org.jetbrains.kotlin.android` **прибрано**: починаючи з AGP 9 Kotlin
+  вбудований у сам плагін Android, і окремий призводить до помилки збірки.
+  Через це зник і блок `kotlinOptions` — версію JVM задає `compileOptions`.
+- Прибрано залежність від AppCompat: активність тепер `ComponentActivity`,
+  тема — `android:Theme.Material.NoActionBar`.
+- Обгортка Gradle (`gradlew`, `gradle/wrapper/`) тепер лежить у репозиторії.
+  CI більше не генерує її сам: версія обгортки має збігатися з тією, під яку
+  зібрано AGP.
+- Додано юніт-тести на розбір протоколу (`app/src/test`), 35 штук. CI ганяє їх
+  перед складанням APK.
+
+---
+
+## Локальна збірка
+
+```bash
+./gradlew testDebugUnitTest assembleDebug
+```
+
+Готовий файл: `app/build/outputs/apk/debug/app-debug.apk`
+
+Потрібні Android Studio з SDK Platform 37 і JDK 17 або новіший — підійде той,
+що йде в комплекті зі Studio (`Android Studio/jbr`). Якщо `java` у терміналі не
+той, задайте його явно:
+
+```bash
+JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew assembleDebug
+```
+
+Встановити на телефон:
+
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+---
+
+## Часті помилки збірки
+
+| Помилка | Причина |
+| --- | --- |
+| `Minimum supported Gradle version is 9.6.0` | обгортку відкотили назад; поверніть `gradle-9.6.0-bin.zip` у `gradle/wrapper/gradle-wrapper.properties` |
+| `The 'org.jetbrains.kotlin.android' plugin is no longer required since AGP 9.0` | плагін Kotlin повернувся у `build.gradle.kts` — приберіть його |
+| `requires libraries and applications to compile against version 37 or later` | `compileSdk` менший за 37 |
+| `Failed to find Platform SDK with path: platforms;android-37` | у SDK немає платформи 37: Studio → SDK Manager → Android SDK Platform 37 |
+| `Inconsistent JVM-target compatibility` | Gradle запущено іншим JDK; задайте `JAVA_HOME` |
+
+---
+
+## Що було виправлено перед збіркою 0.4
 
 - `MainActivity.identifyEcus()` — рядки логу містили `\\n` замість `\n`,
   через що в журнал друкувалося літеральне `\n` замість переносу рядка.
